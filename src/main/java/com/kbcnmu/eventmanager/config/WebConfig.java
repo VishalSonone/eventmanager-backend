@@ -16,7 +16,7 @@ public class WebConfig implements WebMvcConfigurer {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:5173")
+                        .allowedOrigins("https://event-manager-drh9fp4xt-vishal-sonones-projects.vercel.app")
                         .allowedMethods("GET", "POST", "DELETE", "PUT")
                         .allowedHeaders("*");
             }
