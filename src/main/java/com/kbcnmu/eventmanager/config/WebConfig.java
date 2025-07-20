@@ -16,18 +16,25 @@ public class WebConfig implements WebMvcConfigurer {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("https://event-manager-drh9fp4xt-vishal-sonones-projects.vercel.app")
+                        .allowedOrigins(
+                                "http://localhost:5173",
+                                "https://event-manager-drh9fp4xt-vishal-sonones-projects.vercel.app"
+                        )
                         .allowedMethods("GET", "POST", "DELETE", "PUT")
                         .allowedHeaders("*");
             }
         };
     }
 
-    // Static file serving from /uploads/media/
+    // Static file serving
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Serves files at http://localhost:8080/uploads/media/filename.ext
+        // For media files
         registry.addResourceHandler("/uploads/media/**")
                 .addResourceLocations("file:uploads/media/");
+
+        // ✅ For bug screenshots
+        registry.addResourceHandler("/uploads/bugs/**")
+                .addResourceLocations("file:uploads/bugs/");
     }
 }

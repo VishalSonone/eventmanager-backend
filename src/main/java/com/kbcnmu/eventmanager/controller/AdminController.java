@@ -2,6 +2,8 @@ package com.kbcnmu.eventmanager.controller;
 
 import com.kbcnmu.eventmanager.model.Admin;
 import com.kbcnmu.eventmanager.service.AdminService;
+
+import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +25,12 @@ public class AdminController {
 
             Admin admin = adminService.login(email, password);
             admin.setPassword(null); // hide password
+
             return ResponseEntity.ok(admin);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
 
