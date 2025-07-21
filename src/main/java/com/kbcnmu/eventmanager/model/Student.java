@@ -33,9 +33,10 @@ public class Student {
     private String status;
 
     @NotBlank
-    @Pattern(regexp = "^[a-zA-Z0-9]{10,12}$")
+    @Pattern(regexp = "^\\d{16}$", message = "PRN must be a 16-digit number")
     @Column(unique = true)
     private String prn;
+
 
     @NotBlank
     @Pattern(regexp = "^\\d{10}$")
