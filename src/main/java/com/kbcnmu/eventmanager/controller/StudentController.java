@@ -16,10 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = {
-    "http://localhost:3000", 
-    "https://event-manager-drh9fp4xt-vishal-sonones-projects.vercel.app"
-})
+
 public class StudentController {
 
     @Autowired

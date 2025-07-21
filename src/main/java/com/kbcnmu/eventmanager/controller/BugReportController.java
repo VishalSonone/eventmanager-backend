@@ -18,7 +18,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/bug-reports")
-@CrossOrigin
 public class BugReportController {
 
     @Autowired
