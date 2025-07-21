@@ -28,15 +28,5 @@ public class WebConfig implements WebMvcConfigurer {
 	}
 
 
-    // Static file serving
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // For media files
-        registry.addResourceHandler("/uploads/media/**")
-                .addResourceLocations("file:uploads/media/");
-
-        // ✅ For bug screenshots
-        registry.addResourceHandler("/uploads/bugs/**")
-                .addResourceLocations("file:uploads/bugs/");
-    }
+    
 }

@@ -28,4 +28,19 @@ public class CloudinaryService {
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
         return uploadResult.get("secure_url").toString();
     }
+    public void deleteFileByUrl(String url) {
+        String publicId = extractPublicId(url);
+        try {
+            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String extractPublicId(String url) {
+        String[] parts = url.split("/");
+        String last = parts[parts.length - 1];
+        return last.substring(0, last.lastIndexOf('.')); // removes .pdf/.jpg etc.
+    }
+
 }
