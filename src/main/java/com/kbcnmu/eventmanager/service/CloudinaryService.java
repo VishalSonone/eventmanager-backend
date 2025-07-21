@@ -25,8 +25,13 @@ public class CloudinaryService {
     }
 
     public String uploadFile(MultipartFile file) throws IOException {
-        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
-        return uploadResult.get("secure_url").toString();
+    	String originalName = file.getOriginalFilename();
+    	String resourceType = originalName != null && originalName.matches(".*\\.(pdf|docx?|pptx?|txt)$") ? "raw" : "auto";
+
+    	Map uploadResult = cloudinary.uploader().upload(
+    	    file.getBytes(),
+    	    ObjectUtils.asMap("resource_type", resourceType)
+    	);        return uploadResult.get("secure_url").toString();
     }
     public void deleteFileByUrl(String url) {
         String publicId = extractPublicId(url);
