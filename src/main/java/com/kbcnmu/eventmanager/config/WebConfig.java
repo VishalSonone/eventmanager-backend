@@ -18,7 +18,8 @@ public class WebConfig implements WebMvcConfigurer {
                 registry.addMapping("/api/**")
                         .allowedOrigins(
                                 "http://localhost:5173",
-                                "https://event-manager-drh9fp4xt-vishal-sonones-projects.vercel.app"
+                                "https://event-manager-drh9fp4xt-vishal-sonones-projects.vercel.app",
+                            "https://eventmanagerment-deploy.onrender.com"
                         )
                         .allowedMethods("GET", "POST", "DELETE", "PUT")
                         .allowedHeaders("*");
