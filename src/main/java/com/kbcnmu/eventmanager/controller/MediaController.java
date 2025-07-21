@@ -73,8 +73,13 @@ public class MediaController {
                 .findFirst();
 
         if (mediaOpt.isPresent()) {
-            mediaFileRepo.delete(mediaOpt.get());
-            return ResponseEntity.ok(Map.of("message", "File deleted from DB. (Cloudinary deletion optional)"));
+            MediaFile media = mediaOpt.get();
+            mediaFileRepo.delete(media);
+
+            // 🔥 ACTUAL DELETION FROM CLOUDINARY
+            cloudinaryService.deleteFileByUrl(media.getFilePath());
+
+            return ResponseEntity.ok(Map.of("message", "File deleted from DB and Cloudinary"));
         } else {
             return ResponseEntity.status(404).body(Map.of("error", "File not found"));
         }
