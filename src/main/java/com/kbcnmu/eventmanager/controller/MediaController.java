@@ -2,60 +2,56 @@ package com.kbcnmu.eventmanager.controller;
 
 import com.kbcnmu.eventmanager.model.MediaFile;
 import com.kbcnmu.eventmanager.repository.MediaFileRepository;
+import com.kbcnmu.eventmanager.service.CloudinaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/media")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 public class MediaController {
-
-    private static final String UPLOAD_DIR = "uploads/media/";
 
     @Autowired
     private MediaFileRepository mediaFileRepo;
 
-    // Upload file
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
+    // Upload file to Cloudinary
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
                                         @RequestParam(value = "eventName", required = false) String eventName) {
         try {
-            File dir = new File(UPLOAD_DIR);
-            if (!dir.exists()) dir.mkdirs();
-
             String originalName = file.getOriginalFilename();
             String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(originalName);
-            Path filepath = Paths.get(UPLOAD_DIR, filename);
-            Files.copy(file.getInputStream(), filepath, StandardCopyOption.REPLACE_EXISTING);
-
             String fileType = detectFileType(originalName);
+
+            String cloudUrl = cloudinaryService.uploadFile(file);  // Cloudinary URL
+
             MediaFile media = MediaFile.builder()
                     .filename(filename)
                     .fileType(fileType)
-                    .filePath("/uploads/media/" + filename)
+                    .filePath(cloudUrl) // Use Cloudinary URL here
                     .originalName(originalName)
                     .eventName(eventName)
                     .uploadedAt(LocalDateTime.now())
                     .build();
 
             mediaFileRepo.save(media);
-
             return ResponseEntity.ok(media);
+
         } catch (IOException e) {
             return ResponseEntity.status(500).body(Map.of("error", "Upload failed"));
         }
     }
 
-    // List all files
     @GetMapping("/list")
     public List<MediaFile> listFiles(
         @RequestParam(value = "type", required = false) String fileType,
@@ -71,38 +67,24 @@ public class MediaController {
                 .toList();
     }
 
-    // Delete file
     @DeleteMapping("/delete/{filename}")
     public ResponseEntity<?> deleteFile(@PathVariable String filename) {
-        try {
-            Optional<MediaFile> mediaOpt = mediaFileRepo.findAll().stream()
-                    .filter(f -> f.getFilename().equals(filename))
-                    .findFirst();
+        Optional<MediaFile> mediaOpt = mediaFileRepo.findAll().stream()
+                .filter(f -> f.getFilename().equals(filename))
+                .findFirst();
 
-            mediaOpt.ifPresent(mediaFileRepo::delete);
-            Path path = Paths.get(UPLOAD_DIR, filename);
-            Files.deleteIfExists(path);
-            return ResponseEntity.ok(Map.of("message", "File deleted successfully"));
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Delete failed"));
+        if (mediaOpt.isPresent()) {
+            mediaFileRepo.delete(mediaOpt.get());
+            return ResponseEntity.ok(Map.of("message", "File deleted from DB. (Cloudinary deletion optional)"));
+        } else {
+            return ResponseEntity.status(404).body(Map.of("error", "File not found"));
         }
     }
 
-    private String detectFileType(String name) {
-        if (name.matches(".*\\.(jpg|jpeg|png|gif|webp)$")) return "image";
-        else if (name.matches(".*\\.(pdf|docx?|pptx?|txt)$")) return "document";
-        else return "other";
-    }
-    
     @PutMapping("/update/{filename}")
     public ResponseEntity<?> updateMetadata(
             @PathVariable String filename,
             @RequestBody Map<String, String> updates) {
-
-        File file = new File(UPLOAD_DIR + filename);
-        if (!file.exists()) {
-            return ResponseEntity.status(404).body(Map.of("error", "File not found"));
-        }
 
         Optional<MediaFile> mediaOpt = mediaFileRepo.findAll()
                 .stream()
@@ -118,5 +100,11 @@ public class MediaController {
         } else {
             return ResponseEntity.status(404).body(Map.of("error", "Media record not found"));
         }
+    }
+
+    private String detectFileType(String name) {
+        if (name.matches(".*\\.(jpg|jpeg|png|gif|webp)$")) return "image";
+        else if (name.matches(".*\\.(pdf|docx?|pptx?|txt)$")) return "document";
+        else return "other";
     }
 }

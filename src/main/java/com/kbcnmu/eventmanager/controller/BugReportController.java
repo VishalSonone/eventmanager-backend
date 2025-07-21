@@ -2,7 +2,7 @@ package com.kbcnmu.eventmanager.controller;
 
 import com.kbcnmu.eventmanager.model.BugReport;
 import com.kbcnmu.eventmanager.repository.BugReportRepository;
-
+import com.kbcnmu.eventmanager.service.CloudinaryService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -13,12 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/bug-reports")
@@ -27,6 +23,9 @@ public class BugReportController {
 
     @Autowired
     private BugReportRepository bugReportRepository;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> submitBug(
@@ -38,17 +37,13 @@ public class BugReportController {
             String filePath = null;
 
             if (screenshot != null && !screenshot.isEmpty()) {
-                String fileName = UUID.randomUUID() + "_" + screenshot.getOriginalFilename();
-                Path path = Paths.get("uploads/bugs", fileName);
-                Files.createDirectories(path.getParent());
-                Files.write(path, screenshot.getBytes());
-                filePath = "/uploads/bugs/" + fileName;
+                filePath = cloudinaryService.uploadFile(screenshot); // Upload to Cloudinary
             }
 
             BugReport bug = new BugReport();
             bug.setStudentName(studentName);
             bug.setMessage(message);
-            bug.setScreenshotUrl(filePath);
+            bug.setScreenshotUrl(filePath); // Cloudinary URL
             bug.setSubmittedAt(LocalDateTime.now());
 
             return ResponseEntity.ok(bugReportRepository.save(bug));
