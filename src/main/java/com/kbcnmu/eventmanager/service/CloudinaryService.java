@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class CloudinaryService {
@@ -25,14 +26,33 @@ public class CloudinaryService {
     }
 
     public String uploadFile(MultipartFile file) throws IOException {
-    	String originalName = file.getOriginalFilename();
-    	String resourceType = originalName != null && originalName.matches(".*\\.(pdf|docx?|pptx?|txt)$") ? "raw" : "auto";
+        String originalName = file.getOriginalFilename();
+        if (originalName == null || originalName.isEmpty()) {
+            throw new IOException("Invalid file name");
+        }
 
-    	Map uploadResult = cloudinary.uploader().upload(
-    	    file.getBytes(),
-    	    ObjectUtils.asMap("resource_type", resourceType)
-    	);        return uploadResult.get("secure_url").toString();
+        // Extract file extension
+        String extension = originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase();
+        String resourceType = extension.matches("pdf|docx?|pptx?|txt") ? "raw" : "auto";
+
+        // Generate unique public_id with extension for correct download name
+        String publicId = UUID.randomUUID().toString(); // don't include extension here
+        String filename = publicId + "." + extension;
+
+        Map uploadResult = cloudinary.uploader().upload(
+            file.getBytes(),
+            ObjectUtils.asMap(
+                "resource_type", resourceType,
+                "public_id", publicId,             // ensures proper filename
+                "use_filename", true,
+                "unique_filename", false,
+                "filename_override", filename      // explicitly sets extension
+            )
+        );
+
+        return uploadResult.get("secure_url").toString(); // always use secure_url
     }
+
     public void deleteFileByUrl(String url) {
         String publicId = extractPublicId(url);
         try {
@@ -43,9 +63,10 @@ public class CloudinaryService {
     }
 
     private String extractPublicId(String url) {
+        // Works for both image and raw URLs
+        // Example: https://res.cloudinary.com/.../upload/v1234567890/abc123.pdf
         String[] parts = url.split("/");
-        String last = parts[parts.length - 1];
-        return last.substring(0, last.lastIndexOf('.')); // removes .pdf/.jpg etc.
+        String fileWithExt = parts[parts.length - 1];
+        return fileWithExt.contains(".") ? fileWithExt.substring(0, fileWithExt.lastIndexOf('.')) : fileWithExt;
     }
-
 }
