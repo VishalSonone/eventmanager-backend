@@ -19,7 +19,11 @@ public class WebConfig implements WebMvcConfigurer {
                         .allowedOrigins(
                                 "http://localhost:5173",
                                 "https://event-manager-drh9fp4xt-vishal-sonones-projects.vercel.app",
+<<<<<<< HEAD
                                 "https://eventmanagerment-deploy.onrender.com"
+=======
+                            "https://eventmanagerment-deploy.onrender.com"
+>>>>>>> be27710069affd28cff02fd3588471910a4b48fc
                         )
                         .allowedMethods("GET", "POST", "DELETE", "PUT")
                         .allowedHeaders("*");
